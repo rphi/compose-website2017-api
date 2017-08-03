@@ -1,0 +1,12 @@
+_site/
+.sass-cache/
+.jekyll-metadata
+
+# general os x stuff
+*.DS_Store
+._*
+
+# vscode
+.vscode
+
+node_modules
