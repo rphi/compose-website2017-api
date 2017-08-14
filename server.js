@@ -2,14 +2,16 @@ const express = require('express');
 var stripe = require("stripe")(
   "sk_test_BQokikJOvBiI2HlWgH4olfQ2"
 );
+
 const app = express();
 var bodyParser = require('body-parser');
-var response = [];
+var response = {};
 
 app.use(bodyParser.json());
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.set('Access-Control-Allow-Origin', '*');
+  res.header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
   next();
 });
 
@@ -18,41 +20,44 @@ app.get('/api', function (req, res) {
 });
 
 app.post('/api/stripe/charge', function(req, res) {
+  res.set('Content-Type', 'text/javascript');
+  console.log(req.body.token);
   stripe.charges.create({
-    amount: req.amount,
+    amount: req.body.amount,
     currency: "gbp",
-    source: req.token,
-    description: req.description
+    source: req.body.token.id,
+    description: req.body.description
   })
   .then(
     function(charge) {
-      response.push({livemode: charge.livemode, result: 'charge'});
+      response.livemode = charge.livemode;
+      response.result = 'charge';
       if (charge.paid){
-        response.push({
-          success: true,
-          id: charge.id,
-          amount: charge.amount,
-          message: charge.outcome.seller_message,
-          outcome_type: charge.outcome.type
-        })
+        response.success = true;
+        response.id = charge.id;
+        response.amount = charge.amount;
+        response.message = charge.outcome.seller_message;
+        response.outcome_type = charge.outcome.type;
+        response.last4 = charge.source.last4;
       } else {
-        response.push({
-          success: false,
-          id: charge.id,
-          failcode: charge.failure_code,
-          message: charge.failure_message,
-          last4: charge.source.last4
-        })
+        response.success = false;
+        response.id = charge.id;
+        response.failcode = charge.failure_code;
+        response.message = charge.failure_message;
+        response.last4 = charge.source.last4;
       }},
     function(err){
-      response.push({
-        result: 'error',
-        success: false,
-        err_type: err.type,
-        err_msg: err.message
-      });
-    });
-  res.send(JSON.stringify(response));
+        response.result = 'error';
+        response.success = false;
+        response.err_type = err.type;
+        response.err_msg = err.message;
+    })
+    .then(
+      function() {
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+      }
+    );
 });
 
 app.use('/', express.static('www/_site', { extensions: ["html"] })); // serve static website

@@ -5,12 +5,8 @@
   "main": "server.js",
   "author": "rphi",
   "license": "MIT",
-  "scripts": {
-    "build": "node index.js build",
-    "serve": "node index.js serve",
-    "dev": "node index.js dev"
-  },
   "dependencies": {
+    "body-parser": "^1.17.2",
     "express": "^4.15.3",
     "stripe": "^4.23.1"
   }
