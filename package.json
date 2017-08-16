@@ -3,11 +3,18 @@
   "version": "1.0.0",
   "description": "NodeJS app with API backend for Stripe payments and Jekyll for CompSoc",
   "main": "server.js",
+  "scripts": {
+    "start-watch": "nodemon server.js"
+  },
   "author": "rphi",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
+    "pg": "^7.1.2",
     "stripe": "^4.23.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
   }
 }
