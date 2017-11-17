@@ -43,6 +43,16 @@ class Sales {
       if (result.length > 0) {
         if (!result[0].used)
         {
+          if (result[0].userEmail != req.token.email) {
+            var response = {};
+            response.result = 'error';
+            response.success = false;
+            response.err_type = "Not_Your_Coupon";
+            response.err_msg = "The coupon code provided is not associated with your email address.";
+            console.log(JSON.stringify(response));
+            res.send(JSON.stringify(response));
+            return;
+          }
           discount = result[0].value;
         } else {
           var response = {};
@@ -83,36 +93,34 @@ class Sales {
     var stripeResponse = await new ApiStripe().createCharge(req.body.amount, req.body.token, req.body.productData.description);
 
     if (stripeResponse.success) {
-      try {
-        Data.pool.query(
+      Data.pool.query(
           "INSERT INTO sales (\"transactionToken\", \"customerName\", \"productDetails\", \"customerEmail\", \"couponCode\", fulfilled) VALUES ($1, $2, $3, $4, $5, $6);",
           //["test", "test", "{}", "1999-01-08 04:05:06", 'test', '', false]
           [stripeResponse.id, req.body.productData.customer, req.body.productData, req.body.token.email, req.body.coupon, false]
-          );
-      } catch (err) {
-        console.log(err.stack);
-        var response = {};
-        response.result = 'error';
-        response.success = false;
-        response.err_type = "DB_Write_error";
-        response.err_msg = err.stack;
-        console.log(JSON.stringify(response));
-        res.send(JSON.stringify(response));
-        return;
-      }
-      try {
-        Data.pool.query("UPDATE coupons SET used = true WHERE (\"couponCode\" = $1);", [req.body.coupon]);
-      } catch (err) {
-        console.log(err.stack);
-        var response = {};
-        response.result = 'error';
-        response.success = false;
-        response.err_type = "DB_Write_error";
-        response.err_msg = err.stack;
-        console.log(JSON.stringify(response));
-        res.send(JSON.stringify(response));
-        return;
-      }
+          )
+          .catch(function(err){
+            console.log(err.stack);
+            var response = {};
+            response.result = 'error';
+            response.success = false;
+            response.err_type = "DB_Write_error";
+            response.err_msg = err.stack;
+            console.log(JSON.stringify(response));
+            res.send(JSON.stringify(response));
+            return false;
+          });
+      Data.pool.query("UPDATE coupons SET used = true WHERE (\"couponCode\" = $1);", [req.body.coupon])
+        .catch(function(err){
+          console.log(err.stack);
+          var response = {};
+          response.result = 'error';
+          response.success = false;
+          response.err_type = "DB_Write_error";
+          response.err_msg = err.stack;
+          console.log(JSON.stringify(response));
+          res.send(JSON.stringify(response));
+          return false;
+        });
     }
 
     res.send(JSON.stringify(stripeResponse));
@@ -126,30 +134,29 @@ class Sales {
       response.error = "No coupon code provided.";
     }
 
-    try {
-      var result = Data.pool.query("SELECT 'used' FROM 'coupons' WHERE ('couponCode' == $1)", [ req.body.coupon ]);
-    } catch(err) {
+    Data.pool.query("SELECT 'used' FROM 'coupons' WHERE ('couponCode' == $1)", [ req.body.coupon ])
+    .catch(function(err) {
       console.log(err.stack);
       response.success = false;
       response.error = "Error communicating with database.";
-    }
-
-    if (result.length > 0) {
-      if (!result[0].used) {
-        response.success = true;
-        response.valid = true;
+    })
+    .then(function(res){
+      if (res.length > 0) {
+        if (!res[0].used) {
+          response.success = true;
+          response.valid = true;
+        } else {
+          response.success = true;
+          response.valid = false;
+          response.reason = "This coupon has already been used.";
+        }
       } else {
         response.success = true;
         response.valid = false;
-        response.reason = "This coupon has already been used.";
+        response.reason = "This coupon does not exist."
       }
-    } else {
-      response.success = true;
-      response.valid = false;
-      response.reason = "This coupon does not exist."
-    }
-
-    res.send(JSON.stringify(response));
+      res.send(JSON.stringify(response));
+    })
   }
 }
 
