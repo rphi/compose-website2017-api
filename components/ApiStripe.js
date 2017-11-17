@@ -1,17 +1,15 @@
 const stripe = require("stripe")(
   "sk_test_BQokikJOvBiI2HlWgH4olfQ2"
 );
-var response = {};
 
 class ApiStripe {
-  charge(req, res) {
-    res.set('Content-Type', 'text/javascript');
-    console.log(req.body.token);
-    stripe.charges.create({
-      amount: req.body.amount,
+  createCharge(amount, token, description) {
+    var response = {};
+    return stripe.charges.create({
+      amount: amount,
       currency: "gbp",
-      source: req.body.token.id,
-      description: req.body.description
+      source: token.id,
+      description: description
     })
     .then(
       function(charge) {
@@ -37,12 +35,12 @@ class ApiStripe {
           response.err_type = err.type;
           response.err_msg = err.message;
       })
-    .then(
-      function() {
-        console.log(JSON.stringify(response));
-        res.send(JSON.stringify(response));
-      }
-    );
+      .then(
+        function(){
+          console.log(response);
+        }
+      )
+      .return(response);
   }
 }
 

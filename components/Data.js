@@ -1,15 +1,18 @@
 const pg = require('pg');
-var dbPool = new pg.Pool();
+var dbPool = new pg.Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'rob',
+  password: '',
+  port: 5432
+});
 
 class Data {
   constructor() {
     console.log("Connecting to Postgresql...");
     dbPool.connect();
     console.log("Success!");
-  }
-
-  addUser(req, res) {
-    console.log("Recieved new user.")
+    this.pool = dbPool;
   }
 }
 

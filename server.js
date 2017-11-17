@@ -2,10 +2,7 @@ const express = require('express');
 
 const app = express();
 var bodyParser = require('body-parser');
-var response = {};
-var ApiStripe = require('./components/ApiStripe.js');
-const DataClass = require('./components/Data.js');
-var Data = new DataClass();
+var Sales = require('./components/Sales.js');
 
 app.use(bodyParser.json());
 
@@ -19,9 +16,11 @@ app.get('/api', function (req, res) {
   res.send('This is the backend for the CompSoc website. k thanks bye.')
 });
 
-app.post('/api/stripe/charge', function (req, res) { new ApiStripe().charge(req, res); });
+app.post('/api/sales/charge', function (req, res) { new Sales().charge(req, res); });
 
-app.post('/api/data/addnew', function (req, res) { Data.addUser(req, res) });
+app.post('/api/sales/coupon', function(req, res) { new Sales().couponCheck(req, res); });
+
+//app.post('/api/data/addnew', function (req, res) { Data.addUser(req, res) });
 
 app.use('/', express.static('www/_site', { extensions: ["html"] })); // serve static website
 
