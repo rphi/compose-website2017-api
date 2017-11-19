@@ -20,8 +20,6 @@ app.post('/api/sales/charge', function (req, res) { new Sales().charge(req, res)
 
 app.post('/api/sales/coupon', function(req, res) { new Sales().couponCheck(req, res); });
 
-//app.post('/api/data/addnew', function (req, res) { Data.addUser(req, res) });
-
 app.use('/', express.static('www/_site', { extensions: ["html"] })); // serve static website
 
 app.listen(3000, function () {

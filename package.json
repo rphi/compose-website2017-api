@@ -11,6 +11,8 @@
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
+    "mailgen": "^2.0.2",
+    "mailgun-js": "^0.13.1",
     "pg": "^7.1.2",
     "stripe": "^4.23.1"
   },
