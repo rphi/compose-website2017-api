@@ -2,6 +2,7 @@ var ApiStripe = require('../components/ApiStripe.js');
 const DataClass = require('../components/Data.js');
 var Data = new DataClass();
 var EmailUtils = require('../components/EmailUtils.js');
+var shortid = require('shortid');
 
 class HoodieUtils {
   constructor(){
@@ -18,7 +19,7 @@ class HoodieUtils {
       return false;
   }
 
-  createEmailContent(product, discount, stripeResponse){
+  createEmailContent(product, discount, orderId, stripeResponse){
     var description = "";
     if (product.zip) {
         description += "Zippered hoodie (\"Zoodie\"), ";
@@ -59,7 +60,7 @@ class HoodieUtils {
         },
         outro: [
           'That totalled up to <strong>£' + stripeResponse.amount/100 + "</strong> and the payment on your card ending " + stripeResponse.last4 + " was successful.",
-          "Your transaction ID is: <em>" + stripeResponse.id + "</em>",
+          "Your order ID is : <em>" + orderId + "</em> and your Stripe transaction ID is: <em>" + stripeResponse.id + "</em>",
           'Hopefully everything looks right here, but if not, just let us know so that we can sort things out. Remember to include the ID above.'
         ]
       }
@@ -157,6 +158,24 @@ class Sales {
       }
     }
 
+    var orderId = shortid.generate();
+
+    Data.pool.query(
+      "INSERT INTO sales (\"orderId\", \"customerName\", \"productDetails\", \"customerEmail\", \"couponCode\", \"transactionToken\", fulfilled, value) VALUES ($1, $2, $3, $4, $5, $6, $7);",
+      [orderId, req.body.productData.customer, req.body.productData, req.body.token.email, req.body.coupon, null, false, req.body.amount]
+      )
+      .catch(function(err){
+        console.log(err.stack);
+        var response = {};
+        response.result = 'error';
+        response.success = false;
+        response.err_type = "DB_Write_Error_Precharge";
+        response.err_msg = "Error writing order details to database. Your card has not been charged.";
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+        return false;
+      });
+
     var stripeResponse = await new ApiStripe().createCharge(req.body.amount, req.body.token, req.body.productData.description);
 
     if (!stripeResponse.success) {
@@ -164,39 +183,30 @@ class Sales {
       return;
     }
 
-    Data.pool.query(
-      "INSERT INTO sales (\"transactionToken\", \"customerName\", \"productDetails\", \"customerEmail\", \"couponCode\", fulfilled) VALUES ($1, $2, $3, $4, $5, $6);",
-      [stripeResponse.id, req.body.productData.customer, req.body.productData, req.body.token.email, req.body.coupon, false]
-      )
-      .catch(function(err){
-        console.log(err.stack);
-        var response = {};
-        response.result = 'error';
-        response.success = false;
-        response.err_type = "DB_Write_error";
-        response.err_msg = err.stack;
-        console.log(JSON.stringify(response));
-        res.send(JSON.stringify(response));
-        return false;
-      });
-  Data.pool.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
+    Data.pool.query("UPDATE sales SET \"transactionId\" = $1 WHERE (\"orderId\" = $2);", [req.body.coupon, orderId])
     .catch(function(err){
       console.log(err.stack);
       var response = {};
       response.result = 'error';
       response.success = false;
-      response.err_type = "DB_Write_error";
-      response.err_msg = err.stack;
+      response.err_type = "DB_Write_Error_Postcharge";
+      response.err_msg = "Error marking order as paid. Your card has been charged. Contact hello[@]comp-soc.com for help quoting order ID " + orderId + " and transactionId " + stripeResponse.transactionId + ".";
       console.log(JSON.stringify(response));
       res.send(JSON.stringify(response));
       return false;
     });
 
+    Data.pool.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
+      .catch(function(err){
+        console.log(err.stack);
+        // no need to tell the user about this one... probably better they didn't know.
+      });
+
     var emailContent;
 
     switch (req.body.product){
       case ('hoodie'):
-        emailContent = new HoodieUtils().createEmailContent(req.body.productData, discount, stripeResponse);
+        emailContent = new HoodieUtils().createEmailContent(req.body.productData, discount, orderId, stripeResponse);
         break;
       default:
         emailContent = {};

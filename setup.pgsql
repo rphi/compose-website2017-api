@@ -1,22 +1,23 @@
 CREATE TABLE sales
 (
-    "transactionToken" character varying NOT NULL,
+    "orderId" character varying NOT NULL,
     "customerName" character varying,
     "productDetails" json,
     "timestamp" timestamp(1) without time zone DEFAULT NOW(),
     "customerEmail" character varying,
     "couponCode" character varying,
+    "transactionId" character varying,
     fulfilled boolean,
     value integer,
-    PRIMARY KEY ("transactionToken")
+    PRIMARY KEY ("orderId")
 );
 
 CREATE TABLE coupons
 (
-    "couponCode" character varying NOT NULL,
-    "userEmail" character varying NOT NULL,
+    "coupon_code" character varying NOT NULL,
+    "email" character varying NOT NULL,
     "timestamp" timestamp without time zone NOT NULL,
-    used boolean NOT NULL,
+    used boolean NOT NULL DEFAULT false,
 
-    PRIMARY KEY ("couponCode")
+    PRIMARY KEY ("coupon_code")
 );

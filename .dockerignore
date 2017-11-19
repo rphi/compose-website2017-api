@@ -8,6 +8,5 @@ _site/
 
 # vscode
 .vscode
-node_modules
 
-docker_env.env
+node_modules

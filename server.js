@@ -20,6 +20,10 @@ app.post('/api/sales/charge', function (req, res) { new Sales().charge(req, res)
 
 app.post('/api/sales/coupon', function(req, res) { new Sales().couponCheck(req, res); });
 
+app.get('/api/alive', function(req, res) {
+  res.send(JSON.stringify({alive: true, message: "Hi there. This is the CompSoc API endpoint. I am alive."}));
+});
+
 app.use('/', express.static('www/_site', { extensions: ["html"] })); // serve static website
 
 app.listen(3000, function () {
