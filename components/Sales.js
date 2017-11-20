@@ -239,6 +239,8 @@ class Sales {
       console.log(err.stack);
       response.success = false;
       response.error = "Error communicating with database.";
+      res.send(JSON.stringify(response));
+      return;
     })
     .then(function(dbres){
       if (dbres.length > 0) {

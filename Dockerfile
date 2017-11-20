@@ -4,7 +4,7 @@ CMD ["/sbin/my_init"]
 RUN rm -f /etc/service/nginx/down
 RUN rm /etc/nginx/sites-enabled/default
 ADD nginx-compsoc-api.conf /etc/nginx/sites-enabled/compsoc-api.conf
-ADD nginx-env.conf /etc/nginx/sites/enabled/compsoc-api.conf
+ADD nginx-env.conf /etc/nginx/main.d/compsoc-api.conf
 RUN mkdir /home/app/compsoc-api
 ADD . /home/app/compsoc-api
 
