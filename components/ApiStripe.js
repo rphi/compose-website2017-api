@@ -35,11 +35,6 @@ class ApiStripe {
           response.err_type = err.type;
           response.err_msg = err.message;
       })
-      .then(
-        function(){
-          console.log(response);
-        }
-      )
       .return(response);
   }
 }

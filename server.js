@@ -26,6 +26,6 @@ app.get('/api/alive', function(req, res) {
 
 app.use('/', express.static('www/_site', { extensions: ["html"] })); // serve static website
 
-app.listen(3000, function () {
+app.listen(8123, function () {
   console.log('App listening on port 3000!');
 });

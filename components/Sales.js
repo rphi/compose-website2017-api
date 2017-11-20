@@ -3,101 +3,30 @@ const DataClass = require('../components/Data.js');
 var Data = new DataClass();
 var EmailUtils = require('../components/EmailUtils.js');
 var shortid = require('shortid');
-
-class HoodieUtils {
-  constructor(){
-    this.priceList = {
-        'JH001': 2500,
-        'JH01F': 2500,
-        'JH050': 2700,
-        'JH055': 2700
-    }
-  }
-  
-  checkPrice(prodCode, price) {
-      if (this.priceList[prodCode] == price) { return true; }
-      return false;
-  }
-
-  createEmailContent(product, discount, orderId, stripeResponse){
-    var description = "";
-    if (product.zip) {
-        description += "Zippered hoodie (\"Zoodie\"), ";
-    } else {
-        description += "College hoodie, ";
-    }
-    description += "Order code " + product.code + 
-                  " in size " + product.style + " " + product.size + 
-                  " in " + product.colour +
-                  " with " + product.logo_position + " " + product.logo_color + " logo" +
-                  " and " + product.back_print_color + " rear printing.";
-    
-    if (product.name != "") {
-      description += " Custom text: \"" + product.name + "\"";
-    }
-
-    var email = {
-      body: {
-        title: 'Congrats on your new CompSoc hoodie!',
-        intro: 'We\'ve recieved your order (detailed below) and will pass your customisations onto our supplier',
-        table: {
-        data: [
-            {
-                item: 'CompSoc hoodie',
-                description: description,
-                price: '£' + (this.priceList[product.code]/100)
-            }
-        ],
-        columns: {
-            customWidth: {
-                item: '20%',
-                price: '15%'
-            },
-            customAlignment: {
-                price: 'right'
-            }
-        }
-        },
-        outro: [
-          'That totalled up to <strong>£' + stripeResponse.amount/100 + "</strong> and the payment on your card ending " + stripeResponse.last4 + " was successful.",
-          "Your order ID is : <em>" + orderId + "</em> and your Stripe transaction ID is: <em>" + stripeResponse.id + "</em>",
-          'Hopefully everything looks right here, but if not, just let us know so that we can sort things out. Remember to include the ID above.'
-        ]
-      }
-    }
-    if (discount != 0) {
-      email.body.table.data.push({
-        item: 'Discount code',
-        description: 'You used a coupon. Yay.',
-        price: '- £' + discount/100
-      });
-    }
-    return email;
-  }
-}
+const HoodieUtils = require('../components/HoodieUtils.js');
 
 class Sales {
   async charge(req, res) {
     res.set('Content-Type', 'text/javascript');
-    console.log(req.body);
+    //console.log(req.body);
     
     var discount = 0;
 
     if (req.body.coupon != ""){
-      try {
-        var result = Data.pool.query("SELECT 'used' FROM 'coupons' WHERE ('coupon_code' == $1)", [ req.body.coupon ]);
-      } catch(err) {
-        console.log(err.stack);
-        var response = {};
-        response.result = 'error';
-        response.success = false;
-        response.err_type = "DB_error";
-        response.err_msg = err.stack;
-        console.log(JSON.stringify(response));
-        res.send(JSON.stringify(response));
-        return;
-      }
-
+      var response = await Data.pool.query("SELECT 'used' FROM 'coupons' WHERE ('coupon_code' == $1)", [ req.body.coupon ])
+        .then((res) => { return res; })
+        .catch((reason) => {
+          console.log(reason.stack);
+          var response = {};
+          response.result = 'error';
+          response.success = false;
+          response.err_type = "DB_error";
+          response.err_msg = "Unable to verify coupon";
+          console.log(JSON.stringify(response));
+          res.send(JSON.stringify(response));
+          return false;
+        });
+      if (!result) { return; }  // terminate if query failed
       if (result.length > 0) {
         if (!result[0].used)
         {
@@ -160,12 +89,13 @@ class Sales {
 
     var orderId = shortid.generate();
 
-    Data.pool.query(
+    var qresult = await Data.pool.query(
       "INSERT INTO sales (\"orderId\", \"customerName\", \"productDetails\", \"customerEmail\", \"couponCode\", \"transactionToken\", fulfilled, value) VALUES ($1, $2, $3, $4, $5, $6, $7);",
       [orderId, req.body.productData.customer, req.body.productData, req.body.token.email, req.body.coupon, null, false, req.body.amount]
       )
-      .catch(function(err){
-        console.log(err.stack);
+      .then((res) => { return true; })
+      .catch((reason) => {
+        console.log(reason.stack);
         var response = {};
         response.result = 'error';
         response.success = false;
@@ -175,6 +105,8 @@ class Sales {
         res.send(JSON.stringify(response));
         return false;
       });
+    
+    if (qresult == false) { return; } // terminate here if error
 
     var stripeResponse = await new ApiStripe().createCharge(req.body.amount, req.body.token, req.body.productData.description);
 
@@ -183,18 +115,21 @@ class Sales {
       return;
     }
 
-    Data.pool.query("UPDATE sales SET \"transactionId\" = $1 WHERE (\"orderId\" = $2);", [req.body.coupon, orderId])
-    .catch(function(err){
-      console.log(err.stack);
-      var response = {};
-      response.result = 'error';
-      response.success = false;
-      response.err_type = "DB_Write_Error_Postcharge";
-      response.err_msg = "Error marking order as paid. Your card has been charged. Contact hello[@]comp-soc.com for help quoting order ID " + orderId + " and transactionId " + stripeResponse.transactionId + ".";
-      console.log(JSON.stringify(response));
-      res.send(JSON.stringify(response));
-      return false;
-    });
+    var qresult = await Data.pool.query("UPDATE sales SET \"transactionId\" = $1 WHERE (\"orderId\" = $2);", [req.body.coupon, orderId])
+      .then((res) => { return true; })
+      .catch(function(reason){
+        console.log(reason.stack);
+        var response = {};
+        response.result = 'error';
+        response.success = false;
+        response.err_type = "DB_Write_Error_Postcharge";
+        response.err_msg = "Error marking order as paid. Your card has been charged. Contact hello[@]comp-soc.com for help quoting order ID " + orderId + " and transactionId " + stripeResponse.transactionId + ".";
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+        return false;
+      });
+    
+    if (qresult == false) { return; } // terminate here if error
 
     Data.pool.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
       .catch(function(err){
@@ -235,13 +170,6 @@ class Sales {
     }
 
     Data.pool.query("SELECT 'used' FROM coupons WHERE ('coupon_code' = $1)", [ req.body.coupon ])
-    .catch(function(err) {
-      console.log(err.stack);
-      response.success = false;
-      response.error = "Error communicating with database.";
-      res.send(JSON.stringify(response));
-      return;
-    })
     .then(function(dbres){
       if (dbres.length > 0) {
         if (!dbres[0].used) {
@@ -264,6 +192,12 @@ class Sales {
       }
       res.send(JSON.stringify(response));
     })
+    .catch(function(err) {
+      console.log(err.stack);
+      response.success = false;
+      response.error = "Error communicating with database.";
+      res.send(JSON.stringify(response));
+    });
   }
 }
 

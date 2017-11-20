@@ -15,7 +15,8 @@ Remember to setup the environment variables detailed in 'Configuration' below.
 
 There is a Dockerfile that uses Phusion Passenger to start the application.
 
-**TODO.**
+Run `docker-compose up` to build and execute a docker container with a 
+production-ready configuration of the application. Also ensure that you have configured the env variables in `docker_env.env`.
 
 ## Configuration
 
