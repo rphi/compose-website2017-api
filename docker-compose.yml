@@ -4,5 +4,20 @@ services:
     build: .
     ports:
       - "8123:3000"
+    networks:
+      - web
+      - db
     env_file:
       - "docker_env.env"
+  db:
+    image: postgres
+    networks:
+      - db
+    environment:
+      - POSTGRES_USER=sales
+      - POSTGRES_PASSWORD=sales
+    volumes:
+      - ./setup.pgsql:/docker-entrypoint-initdb.d/1-setup.sql
+networks:
+  db:
+  web:
