@@ -1,6 +1,7 @@
 var ApiStripe = require('../components/ApiStripe.js');
 const DataClass = require('../components/Data.js');
 var Data = new DataClass();
+Data.connect();
 var EmailUtils = require('../components/EmailUtils.js');
 var shortid = require('shortid');
 const HoodieUtils = require('../components/HoodieUtils.js');
