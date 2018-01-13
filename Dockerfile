@@ -14,11 +14,12 @@ RUN mkdir /home/app/compsoc-api
 
 ADD nginx-compsoc-api.conf /etc/nginx/sites-enabled/compsoc-api.conf
 ADD nginx-env.conf /etc/nginx/main.d/compsoc-api.conf
-ADD . /home/app/compsoc-api
 
-
+ADD package.json /home/app/compsoc-api/package.json
 WORKDIR /home/app/compsoc-api
 RUN yarn
+
+ADD . /home/app/compsoc-api
 
 CMD ["/sbin/my_init"]
 EXPOSE 80
