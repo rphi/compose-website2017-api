@@ -16,7 +16,7 @@ class HoodieUtils {
   createEmailContent(product, discount, orderId, stripeResponse){
     var description = "";
     if (product.zip) {
-        description += "Zippered hoodie (\"Zoodie\"), ";
+        description += "Zipped hoodie (\"Zoodie\"), ";
     } else {
         description += "College hoodie, ";
     }
@@ -32,8 +32,8 @@ class HoodieUtils {
 
     var email = {
       body: {
-        title: 'Congrats on your new CompSoc hoodie!',
-        intro: 'We\'ve recieved your order (detailed below) and will pass your customisations onto our supplier',
+        title: "You've just bought a CompSoc hoodie!",
+        intro: "We've recieved your order (detailed below) and will pass your customisations onto our supplier.",
         table: {
         data: [
             {
@@ -55,7 +55,7 @@ class HoodieUtils {
         outro: [
           'That totalled up to <strong>£' + stripeResponse.amount/100 + "</strong> and the payment on your card ending " + stripeResponse.last4 + " was successful.",
           "Your order ID is <em>" + orderId + "</em> and your Stripe transaction ID is <em>" + stripeResponse.id + "</em>",
-          'Hopefully everything looks right here, but if not, just let us know so that we can sort things out. Remember to include the ID above.'
+          'Please note down the above ID as we will need it to be able to resolve any problems.'
         ]
       }
     }
