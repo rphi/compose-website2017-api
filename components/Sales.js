@@ -13,7 +13,7 @@ class Sales {
     var discount = 0;
 
     if (req.body.coupon != ""){
-      var response = await Data.pool.query("SELECT 'used' FROM 'coupons' WHERE ('coupon_code' == $1)", [ req.body.coupon ])
+      var response = await Data.query("SELECT 'used' FROM 'coupons' WHERE ('coupon_code' == $1)", [ req.body.coupon ])
         .then((res) => { return res; })
         .catch((reason) => {
           console.log(reason.stack);
@@ -89,7 +89,7 @@ class Sales {
 
     var orderId = shortid.generate();
 
-    var qresult = await Data.pool.query(
+    var qresult = await Data.query(
       "INSERT INTO sales (\"orderId\", \"customerName\", \"productDetails\", \"customerEmail\", \"couponCode\", \"transactionToken\", fulfilled, value) VALUES ($1, $2, $3, $4, $5, $6, $7);",
       [orderId, req.body.productData.customer, req.body.productData, req.body.token.email, req.body.coupon, null, false, req.body.amount]
       )
@@ -115,7 +115,7 @@ class Sales {
       return;
     }
 
-    var qresult = await Data.pool.query("UPDATE sales SET \"transactionId\" = $1 WHERE (\"orderId\" = $2);", [req.body.coupon, orderId])
+    var qresult = await Data.query("UPDATE sales SET \"transactionId\" = $1 WHERE (\"orderId\" = $2);", [req.body.coupon, orderId])
       .then((res) => { return true; })
       .catch(function(reason){
         console.log(reason.stack);
@@ -131,7 +131,7 @@ class Sales {
     
     if (qresult == false) { return; } // terminate here if error
 
-    Data.pool.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
+    Data.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
       .catch(function(err){
         console.log(err.stack);
         // no need to tell the user about this one... probably better they didn't know.
@@ -169,7 +169,7 @@ class Sales {
       response.error = "No coupon code provided.";
     }
 
-    Data.pool.query("SELECT 'used' FROM coupons WHERE ('coupon_code' = $1)", [ req.body.coupon ])
+    Data.query("SELECT 'used' FROM coupons WHERE ('coupon_code' = $1)", [ req.body.coupon ])
     .then(function(dbres){
       if (dbres.length > 0) {
         if (!dbres[0].used) {
