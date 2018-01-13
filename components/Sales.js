@@ -26,11 +26,16 @@ class Sales {
           res.send(JSON.stringify(response));
           return false;
         });
-      if (!result) { return; }  // terminate if query failed
+
+      // Terminate if query failed
+      if (!result) {
+        return;
+      }
+
       if (result.length > 0) {
         if (!result[0].used)
         {
-          if (result[0].email != req.token.email) {
+          if (result[0].email !== req.token.email) {
             var response = {};
             response.result = 'error';
             response.success = false;
@@ -40,7 +45,7 @@ class Sales {
             res.send(JSON.stringify(response));
             return;
           }
-          if (!result[0].for_item == req.body.product){
+          if (!result[0].for_item === req.body.product){
             var response = {};
             response.result = 'error';
             response.success = false;
@@ -75,7 +80,7 @@ class Sales {
 
     if (req.body.product == "hoodie"){
       var hu = new HoodieUtils();
-      if (hu.checkPrice(req.body.productData.code, (req.body.amount + discount)) == false) {
+      if (hu.checkPrice(req.body.productData.code, (req.body.amount + discount)) === false) {
         var response = {};
         response.result = 'error';
         response.success = false;
@@ -106,7 +111,10 @@ class Sales {
         return false;
       });
     
-    if (qresult == false) { return; } // terminate here if error
+    // Terminate here if error
+    if (qresult === false) {
+      return;
+    }
 
     var stripeResponse = await new ApiStripe().createCharge(req.body.amount, req.body.token, req.body.productData.description);
 
@@ -129,7 +137,10 @@ class Sales {
         return false;
       });
     
-    if (qresult == false) { return; } // terminate here if error
+    // Terminate if error
+    if (qresult === false) {
+      return;
+    }
 
     Data.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
       .catch(function(err){
@@ -164,7 +175,7 @@ class Sales {
 
   async couponCheck(req, res) {
     var response = {};
-    if (req.body.coupon = ""){
+    if (req.body.coupon === ""){
       response.success = false;
       response.error = "No coupon code provided.";
     }
@@ -173,13 +184,14 @@ class Sales {
     .then(function(dbres){
       if (dbres.length > 0) {
         if (!dbres[0].used) {
-          if (dbres[0].for_item != req.body.item) {
+          if (dbres[0].for_item === req.body.item) {
+            response.success = true;
+            response.valid = true;
+          } else {
             response.success = true;
             response.valid = false;
             response.reason = "This coupon is not valid for this item.";
           }
-          response.success = true;
-          response.valid = true;
         } else {
           response.success = true;
           response.valid = false;

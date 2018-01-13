@@ -4,15 +4,13 @@ const stripe = require("stripe")(
 
 class ApiStripe {
   createCharge(amount, token, description) {
-    var response = {};
+    const response = {};
     return stripe.charges.create({
       amount: amount,
       currency: "gbp",
       source: token.id,
       description: description
-    })
-    .then(
-      function(charge) {
+    }).then(charge => {
         response.livemode = charge.livemode;
         response.result = 'charge';
         if (charge.paid){
@@ -28,14 +26,13 @@ class ApiStripe {
           response.failcode = charge.failure_code;
           response.message = charge.failure_message;
           response.last4 = charge.source.last4;
-        }},
-      function(err){
+        }
+      }, err => {
           response.result = 'error';
           response.success = false;
           response.err_type = err.type;
           response.err_msg = err.message;
-      })
-      .return(response);
+      }).return(response);
   }
 }
 
