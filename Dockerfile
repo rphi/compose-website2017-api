@@ -12,8 +12,8 @@ RUN rm -f /etc/service/nginx/down
 RUN rm /etc/nginx/sites-enabled/default
 RUN mkdir /home/app/compsoc-api
 
-ADD nginx-compsoc-api.conf /etc/nginx/sites-enabled/compsoc-api.conf
 ADD nginx-env.conf /etc/nginx/main.d/compsoc-api.conf
+ADD nginx-compsoc-api.conf /etc/nginx/sites-enabled/compsoc-api.conf
 
 ADD package.json /home/app/compsoc-api/package.json
 WORKDIR /home/app/compsoc-api
