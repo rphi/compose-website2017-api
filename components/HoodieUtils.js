@@ -1,36 +1,63 @@
 class HoodieUtils {
-  constructor(){
-    this.priceList = {
-        'JH001': 2500,
-        'JH01F': 2500,
-        'JH050': 2700,
-        'JH055': 2700
-    }
+  constructor() {
+    this.hoodies = {
+      'JH001': {
+        name: 'College Hoodie',
+        cost: 2500,
+        zip: false,
+        style: 'unisex',
+      },
+
+      'JH01F': {
+        name: 'Girlie College Hoodie',
+        cost: 2500,
+        zip: false,
+        style: 'womens',
+      },
+
+      'JH050': {
+        name: 'Zoodie',
+        cost: 2700,
+        zip: true,
+        style: 'unisex',
+      },
+
+      'JH055': {
+        name: 'Girlie Zoodie',
+        cost: 2700,
+        zip: true,
+        style: 'womens',
+      },
+    };
   }
   
+  // This method checks whether the given price
+  // matches the given product code.
   checkPrice(prodCode, price) {
-      if (this.priceList[prodCode] == price) { return true; }
-      return false;
+    return (this.priceList[prodCode] === price)
   }
 
-  createEmailContent(product, discount, orderId, stripeResponse){
+  // Generates an email given a product description, discount, orderID, and some stripe information
+  createEmailContent(product, discount, orderId, stripeResponse) {
     var description = "";
-    if (product.zip) {
-        description += "Zipped hoodie (\"Zoodie\"), ";
+
+    const hoodie = this.hoodies[product.code];
+
+    if (hoodie.zip) {
+      description += "Zipped hoodie, ";
     } else {
-        description += "College hoodie, ";
-    }
-    description += "Order code " + product.code + 
-                  " in size " + product.style + " " + product.size + 
-                  " in " + product.colour +
-                  " with " + product.logo_position + " " + product.logo_color + " logo" +
-                  " and " + product.back_print_color + " rear printing.";
-    
-    if (product.name != "") {
-      description += " Custom text: \"" + product.name + "\"";
+      description += "Regular hoodie, ";
     }
 
-    var email = {
+    description += `Order code ${product.code} in size ${hoodie.style} ${product.size} ` +
+      `in ${product.hoodie_color} with ${product.logo_position} ${product.logo_color} logo ` +
+      `and ${product.back_print_color} read printing.`
+    
+    if (product.custom_text !== "") {
+      description += ` Custom text: "${product.custom_text}"`;
+    }
+
+    const email = {
       body: {
         title: "You've just bought a CompSoc hoodie!",
         intro: "We've recieved your order (detailed below) and will pass your customisations onto our supplier.",
@@ -39,7 +66,7 @@ class HoodieUtils {
             {
                 item: 'CompSoc hoodie',
                 description: description,
-                price: '£' + (this.priceList[product.code]/100)
+                price: '£' + (hoodie.cost/100)
             }
         ],
         columns: {
@@ -59,13 +86,16 @@ class HoodieUtils {
         ]
       }
     }
-    if (discount != 0) {
+
+    // Add something to the email if we have a discount
+    if (discount !== 0) {
       email.body.table.data.push({
         item: 'Discount code',
-        description: 'You used a coupon. Yay.',
+        description: 'Thank you for supporting CompSoc.',
         price: '- £' + discount/100
       });
     }
+
     return email;
   }
 }
