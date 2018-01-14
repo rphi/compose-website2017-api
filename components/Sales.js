@@ -14,7 +14,7 @@ class Sales {
 
     if (req.body.coupon !== "") {
       // get the coupon code
-      const response = await Data.query("SELECT * FROM coupons WHERE coupon_code == $1", [req.body.coupon])
+      const result = await Data.query("SELECT * FROM coupons WHERE coupon_code == $1", [req.body.coupon])
         .then(result => result)
         .catch(reason => {
           console.log(reason.stack);
@@ -35,7 +35,7 @@ class Sales {
         return;
       }
 
-      const rows = response.rows;
+      const rows = result.rows;
       const coupon = rows[0];
       const response = {
         success: false,
@@ -155,7 +155,7 @@ class Sales {
     }
 
     Data.query("UPDATE coupons SET used = true WHERE coupon_code = $1;", [req.body.coupon])
-      .catch(function(err){
+      .catch(err => {
         console.log(err.stack);
         // no need to tell the user about this one... probably better they didn't know.
         // haha
@@ -186,7 +186,7 @@ class Sales {
   }
 
   couponCheck(req, res) {
-    const response = {};
+    let response = {};
 
     // No coupon provided? Error.
     if (req.body.coupon === ""){
