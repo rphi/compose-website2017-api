@@ -34,7 +34,7 @@ class HoodieUtils {
   // This method checks whether the given price
   // matches the given product code.
   checkPrice(prodCode, price) {
-    return (this.hoodies[prodCode] === price);
+    return (this.hoodies[prodCode].cost === price);
   }
 
   // Generates an email given a product description, discount, orderID, and some stripe information
