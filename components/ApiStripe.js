@@ -1,5 +1,5 @@
 const stripe = require("stripe")(
-  process.env.STRIPE_KEY_PRIVATE
+  process.env.STRIPE_KEY_SECRET
 );
 
 class ApiStripe {

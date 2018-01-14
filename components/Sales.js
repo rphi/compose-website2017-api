@@ -8,79 +8,71 @@ const HoodieUtils = require('../components/HoodieUtils.js');
 class Sales {
   async charge(req, res) {
     res.set('Content-Type', 'text/javascript');
-    //console.log(req.body);
-    
+    console.log(req.body);
+
     var discount = 0;
 
-    if (req.body.coupon != ""){
-      var response = await Data.query("SELECT 'used' FROM 'coupons' WHERE ('coupon_code' == $1)", [ req.body.coupon ])
-        .then((res) => { return res; })
-        .catch((reason) => {
+    if (req.body.coupon !== "") {
+      // get the coupon code
+      const response = await Data.query("SELECT * FROM coupons WHERE coupon_code == $1", [req.body.coupon])
+        .then(result => result)
+        .catch(reason => {
           console.log(reason.stack);
-          var response = {};
+
+          const response = {};
           response.result = 'error';
           response.success = false;
           response.err_type = "DB_error";
           response.err_msg = "Unable to verify coupon";
+
           console.log(JSON.stringify(response));
           res.send(JSON.stringify(response));
           return false;
         });
 
       // Terminate if query failed
-      if (!result) {
+      if (!response) {
         return;
       }
 
-      if (result.length > 0) {
-        if (!result[0].used)
-        {
-          if (result[0].email !== req.token.email) {
-            var response = {};
-            response.result = 'error';
-            response.success = false;
-            response.err_type = "Not_Your_Coupon";
-            response.err_msg = "The coupon code provided is not associated with your email address.";
-            console.log(JSON.stringify(response));
-            res.send(JSON.stringify(response));
-            return;
-          }
-          if (!result[0].for_item === req.body.product){
-            var response = {};
-            response.result = 'error';
-            response.success = false;
-            response.err_type = "Invalid_Item";
-            response.err_msg = "The coupon code provided is not valid for this item.";
-            console.log(JSON.stringify(response));
-            res.send(JSON.stringify(response));
-            return;
-          }
-          discount = result[0].value;
-        } else {
-          var response = {};
-          response.result = 'error';
-          response.success = false;
-          response.err_type = "Invalid_Coupon";
-          response.err_msg = "You have already used the coupon code provided.";
-          console.log(JSON.stringify(response));
-          res.send(JSON.stringify(response));
-          return;
-        }
-      } else {
-        var response = {};
+      const rows = response.rows;
+      const coupon = rows[0];
+      const response = {
+        success: false,
+      };
+
+      if (rows.length === 0) {
         response.result = 'error';
-        response.success = false;
         response.err_type = "Invalid_Coupon";
         response.err_msg = "The coupon you have provided does not exist.";
+      } else if (coupon.used) {
+        response.result = 'error';
+        response.err_type = "Invalid_Coupon";
+        response.err_msg = "You have already used the coupon code provided.";
+      } else if (coupon.email !== req.token.email) {
+        response.result = 'error';
+        response.err_type = "Not_Your_Coupon";
+        response.err_msg = "The coupon code provided is not associated with your email address.";
+      } else if (result[0].for_item !== req.body.product) {
+        response.result = 'error';
+        response.err_type = "Invalid_Item";
+        response.err_msg = "The coupon code provided is not valid for this item.";
+      } else {
+        discount = coupon.value;
+        response.success = true;
+      }
+
+      // We know it's an error if the discount does not equal the coupon discount
+      // (remember, the coupon may not even exist)
+      if (!response.success) {
         console.log(JSON.stringify(response));
         res.send(JSON.stringify(response));
-        return;
       }
     }
 
-    if (req.body.product == "hoodie"){
+    if (req.body.product == "hoodie") {
       var hu = new HoodieUtils();
-      if (hu.checkPrice(req.body.productData.code, (req.body.amount + discount)) === false) {
+      if (!hu.checkPrice(req.body.productData.code, (req.body.amount + discount))) {
         var response = {};
         response.result = 'error';
         response.success = false;
@@ -95,7 +87,12 @@ class Sales {
     var orderId = shortid.generate();
 
     var qresult = await Data.query(
-      "INSERT INTO sales (\"orderId\", \"customerName\", \"productDetails\", \"customerEmail\", \"couponCode\", \"transactionToken\", fulfilled, value) VALUES ($1, $2, $3, $4, $5, $6, $7);",
+      `
+        INSERT INTO sales (
+          order_id, customer_name, product_details, customer_email,
+          coupon_code, transaction_id, fulfilled, value
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+      `,
       [orderId, req.body.productData.customer, req.body.productData, req.body.token.email, req.body.coupon, null, false, req.body.amount]
       )
       .then((res) => { return true; })
@@ -123,7 +120,7 @@ class Sales {
       return;
     }
 
-    var qresult = await Data.query("UPDATE sales SET \"transactionId\" = $1 WHERE (\"orderId\" = $2);", [req.body.coupon, orderId])
+    var qresult = await Data.query("UPDATE sales SET transaction_id = $1 WHERE (orderId = $2);", [req.body.coupon, orderId])
       .then((res) => { return true; })
       .catch(function(reason){
         console.log(reason.stack);
@@ -131,7 +128,7 @@ class Sales {
         response.result = 'error';
         response.success = false;
         response.err_type = "DB_Write_Error_Postcharge";
-        response.err_msg = "Error marking order as paid. Your card has been charged. Contact hello[@]comp-soc.com for help quoting order ID " + orderId + " and transactionId " + stripeResponse.transactionId + ".";
+        response.err_msg = "Error marking order as paid. Your card has been charged. Contact hello@comp-soc.com for help quoting order ID " + orderId + " and transaction_id " + stripeResponse.transaction_id + ".";
         console.log(JSON.stringify(response));
         res.send(JSON.stringify(response));
         return false;
@@ -142,7 +139,7 @@ class Sales {
       return;
     }
 
-    Data.query("UPDATE coupons SET used = true WHERE (\"coupon_code\" = $1);", [req.body.coupon])
+    Data.query("UPDATE coupons SET used = true WHERE (coupon_code = $1);", [req.body.coupon])
       .catch(function(err){
         console.log(err.stack);
         // no need to tell the user about this one... probably better they didn't know.

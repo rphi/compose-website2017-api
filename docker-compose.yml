@@ -11,6 +11,8 @@ services:
       - "docker_env.env"
   db:
     image: postgres
+    ports:
+      - "5432:5432"
     networks:
       - db
     environment:
