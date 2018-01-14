@@ -173,43 +173,77 @@ class Sales {
     res.send(JSON.stringify(response));
   }
 
-  async couponCheck(req, res) {
-    var response = {};
+  couponCheck(req, res) {
+    const response = {};
+
+    // No coupon provided? Error.
     if (req.body.coupon === ""){
       response.success = false;
+      response.valid = false;
       response.error = "No coupon code provided.";
+
+      // Send response
+      res.send(JSON.stringify(response));
+      return;
     }
 
-    Data.query("SELECT 'used' FROM coupons WHERE ('coupon_code' = $1)", [ req.body.coupon ])
-    .then(function(dbres){
-      if (dbres.length > 0) {
-        if (!dbres[0].used) {
-          if (dbres[0].for_item === req.body.item) {
-            response.success = true;
-            response.valid = true;
-          } else {
-            response.success = true;
-            response.valid = false;
-            response.reason = "This coupon is not valid for this item.";
-          }
-        } else {
+    Data.query("SELECT * FROM coupons WHERE coupon_code = $1", [req.body.coupon])
+      .then(resp => {
+        const rows = resp.rows;
+
+        // Does the coupon exist?
+        if (rows.length === 0) {
+          response.success = true;
+          response.valid = false;
+          response.reason = "This coupon does not exist.";
+
+          // Send response
+          res.send(JSON.stringify(response));
+          return;
+        }
+
+        // Our particular coupon
+        const coupon = rows[0];
+
+        // Has the coupon been used before?
+        if (coupon.used) {
           response.success = true;
           response.valid = false;
           response.reason = "This coupon has already been used.";
+
+          // Send response
+          res.send(JSON.stringify(response));
+          return;
         }
-      } else {
+
+        // Is this coupon for the right item?
+        if (coupon.for_item !== req.body.item) {
+          response.success = true;
+          response.valid = false;
+          response.reason = "This coupon is invalid.";
+
+          // Send response
+          res.send(JSON.stringify(response));
+          return;
+        }
+
+        // Finally! We can buy this item.
         response.success = true;
-        response.valid = false;
-        response.reason = "This coupon does not exist."
-      }
-      res.send(JSON.stringify(response));
-    })
-    .catch(function(err) {
-      console.log(err.stack);
-      response.success = false;
-      response.error = "Error communicating with database.";
-      res.send(JSON.stringify(response));
-    });
+        response.valid = true;
+
+        // Send response
+        res.send(JSON.stringify(response));
+        return;
+      })
+      .catch(err => {
+        console.log(err.stack);
+        response.success = false;
+        response.error = "Error communicating with database.";
+
+        // Send response
+        res.send(JSON.stringify(response));
+        return;
+      });
   }
 }
 
