@@ -28,13 +28,13 @@ class Data {
   // the query method is for passing queries to the pool
   query(text, values, callback) {
     console.log('query:', text, values);
-    return this.query(text, values, callback);
+    return this.pool.query(text, values, callback);
   }
 
   // the pool also supports checking out a client for
   // multiple operations, such as a transaction
   connect(callback) {
-    dbPool.connect(callback);
+    this.pool.connect(callback);
   }
 }
 
