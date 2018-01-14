@@ -62,11 +62,11 @@ class Sales {
         response.success = true;
       }
 
-      // We know it's an error if the discount does not equal the coupon discount
-      // (remember, the coupon may not even exist)
+      // If it's not a success, lets return our response
       if (!response.success) {
         console.log(JSON.stringify(response));
         res.send(JSON.stringify(response));
+        return;
       }
     }
 
