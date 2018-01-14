@@ -14,7 +14,7 @@ class Sales {
 
     if (req.body.coupon !== "") {
       // get the coupon code
-      const result = await Data.query("SELECT * FROM coupons WHERE coupon_code == $1", [req.body.coupon])
+      const result = await Data.query("SELECT * FROM coupons WHERE coupon_code = $1", [req.body.coupon])
         .then(result => result)
         .catch(reason => {
           console.log(reason.stack);
