@@ -9,7 +9,7 @@ class Email {
         name: 'CompSoc',
         link: 'https://comp-soc.com/',
         logo: 'https://comp-soc.com/static/img/compsoc-horizontal.svg',
-        copyright: 'CompSoc Edinburgh ♥ You. Email generated with Mailgen and NodeJS. We use Stripe for payment processing and we never see your card details.',
+        copyright: 'CompSoc ♥ You.',
       }
     })
   }
