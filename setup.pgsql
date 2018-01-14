@@ -16,6 +16,7 @@ CREATE TABLE coupons
 (
     coupon_code character varying NOT NULL,
     email character varying NOT NULL,
+    for_item character varying NOT NULL,
     "timestamp" timestamp without time zone NOT NULL,
     used boolean NOT NULL DEFAULT false,
 
