@@ -26,7 +26,7 @@ app.post('/api/sales/coupon', function(req, res) {
 });
 
 app.get('/api/alive', function(req, res) {
-  res.send(JSON.stringify({alive: true, message: "Hi there. This is the CompSoc API endpoint. I am alive."}));
+  res.send(JSON.stringify({alive: true, pk: process.env.STRIPE_KEY_PUBLIC}));
 });
 
 app.use('/', express.static('www/_site', { extensions: ["html"] })); // serve static website

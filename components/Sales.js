@@ -8,7 +8,7 @@ const HoodieUtils = require('../components/HoodieUtils.js');
 class Sales {
   async charge(req, res) {
     res.set('Content-Type', 'text/javascript');
-    console.log(req.body);
+    // console.log(req.body);
 
     var discount = 0;
 
@@ -124,7 +124,7 @@ class Sales {
     }
 
     const stripeResponse = await new ApiStripe().createCharge(req.body.amount, req.body.token, req.body.productData.description);
-
+    console.log(stripeResponse);
     // Check if stripe succeeded.
     if (!stripeResponse.success) {
       Data.query("delete from sales where order_id = $1", [orderId]);
@@ -132,7 +132,7 @@ class Sales {
       return;
     }
 
-    qresult = await Data.query("UPDATE sales SET transaction_id = $1 WHERE (order_id = $2);", [req.body.coupon, orderId])
+    qresult = await Data.query("UPDATE sales SET transaction_id = $1 WHERE (order_id = $2);", [stripeResponse.id, orderId])
       .then(() => true)
       .catch(reason => {
         console.log(reason.stack);
