@@ -39,50 +39,34 @@ class HoodieUtils {
 
   // Generates an email given a product description, discount, orderID, and some stripe information
   createEmailContent(product, discount, orderId, stripeResponse) {
-    var description = "";
-
     const hoodie = this.hoodies[product.code];
-
-    if (hoodie.zip) {
-      description += "Zipped hoodie, ";
-    } else {
-      description += "Regular hoodie, ";
-    }
-
-    description += `Order code ${product.code} in size ${hoodie.style} ${product.size} ` +
-      `in ${product.hoodie_color} with ${product.logo_position} ${product.logo_color} logo ` +
-      `and ${product.back_print_color} read printing.`
-    
-    if (product.custom_text !== "") {
-      description += ` Custom text: "${product.custom_text}"`;
-    }
+    const description = `Hoodie ${product.code} in size ${hoodie.style} ${product.size}.`;
 
     const email = {
       body: {
         title: "You've just bought a CompSoc hoodie!",
-        intro: "We've recieved your order (detailed below) and will pass your customisations onto our supplier.",
+        intro: "We'll let you know when your hoodie will arrive.",
         table: {
-        data: [
-            {
+          data: [
+              {
                 item: 'CompSoc hoodie',
                 description: description,
                 price: '£' + (hoodie.cost/100)
-            }
-        ],
-        columns: {
+              }
+          ],
+          columns: {
             customWidth: {
-                item: '20%',
-                price: '15%'
+              item: '20%',
+              price: '15%'
             },
             customAlignment: {
-                price: 'right'
+              price: 'right'
             }
-        }
+          }
         },
         outro: [
-          'That totalled up to <strong>£' + stripeResponse.amount/100 + "</strong> and the payment on your card ending " + stripeResponse.last4 + " was successful.",
-          "Your order ID is <em>" + orderId + "</em> and your Stripe transaction ID is <em>" + stripeResponse.id + "</em>",
-          'Please note down the above ID as we will need it to be able to resolve any problems.'
+          `The payment on your card ending ${stripeResponse.last4} was successful.`,
+          `Your order ID is <em>${orderId}</em> and your Stripe transaction ID is <em>${stripeResponse.id}</em>`,
         ]
       }
     }
@@ -92,7 +76,7 @@ class HoodieUtils {
       email.body.table.data.push({
         item: 'Discount code',
         description: 'Thank you for supporting CompSoc.',
-        price: '- £' + discount/100
+        price: '- £' + (discount/100)
       });
     }
 

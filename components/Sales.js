@@ -8,9 +8,25 @@ const HoodieUtils = require('../components/HoodieUtils.js');
 class Sales {
   async charge(req, res) {
     res.set('Content-Type', 'text/javascript');
-    // console.log(req.body);
+    console.log(req.body);
 
-    var discount = 0;
+    if (req.body.product !== "hoodie") {
+      return;
+    }
+
+    if (req.body.productData.customer === "") {
+      const response = {};
+      response.result = 'error';
+      response.success = false;
+      response.err_type = "Missing customer name";
+      response.err_msg = "Please tell us your name!";
+
+      console.log(JSON.stringify(response));
+      res.send(JSON.stringify(response));
+      return;
+    }
+
+    let discount = 0;
 
     if (req.body.coupon !== "") {
       // get the coupon code
@@ -31,7 +47,7 @@ class Sales {
         });
 
       // Terminate if query failed
-      if (!response) {
+      if (!result) {
         return;
       }
 
@@ -49,16 +65,16 @@ class Sales {
         response.result = 'error';
         response.err_type = "Invalid_Coupon";
         response.err_msg = "You have already used the coupon code provided.";
-      } else if (coupon.email !== req.token.email) {
+      } else if (coupon.email !== req.body.token.email) {
         response.result = 'error';
         response.err_type = "Not_Your_Coupon";
         response.err_msg = "The coupon code provided is not associated with your email address.";
-      } else if (result[0].for_item !== req.body.product) {
+      } else if (coupon.for_item !== req.body.product) {
         response.result = 'error';
         response.err_type = "Invalid_Item";
         response.err_msg = "The coupon code provided is not valid for this item.";
       } else {
-        discount = coupon.value;
+        discount = 500; // 500 pennies = £5
         response.success = true;
       }
 
@@ -171,7 +187,7 @@ class Sales {
         break;
     }
 
-    new EmailUtils().sendMail('Thanks for your recent purchase!', emailContent, req.body.token.email);
+    new EmailUtils().sendMail('Thanks for your recent purchase!', emailContent, req.body.token.email, stripeResponse.id);
 
     const response = {
       success: true,

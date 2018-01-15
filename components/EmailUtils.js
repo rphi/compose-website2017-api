@@ -4,9 +4,9 @@ var Mailgen = require('mailgen');
 class Email {
   constructor() {
     this.mgen = new Mailgen({
-      theme: 'default',
+      theme: 'salted',
       product: {
-        name: 'CompSoc',
+        name: 'CompSoc Hoodie',
         link: 'https://comp-soc.com/',
         logo: 'https://comp-soc.com/static/img/compsoc-horizontal.svg',
         copyright: 'CompSoc ♥ You.',
@@ -14,13 +14,15 @@ class Email {
     })
   }
 
-  sendMail(subject, emailContent, address) {
-    var email = this.mgen.generate(emailContent);
-    var mgData = {
+  sendMail(subject, emailContent, address, msgID) {
+    const email = this.mgen.generate(emailContent);
+    console.log('sending msg-id',msgID)
+    const mgData = {
       from: 'CompSoc Edinburgh <hello@comp-soc.com>',
       to: address,
       subject: subject,
-      html: email
+      html: email,
+      'h:Message-ID': msgID,
     }
     MailGun.messages().send(mgData)
       .catch(function(err) {
