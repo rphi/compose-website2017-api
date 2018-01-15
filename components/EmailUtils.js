@@ -8,7 +8,7 @@ class Email {
       product: {
         name: 'CompSoc Hoodie',
         link: 'https://comp-soc.com/',
-        logo: 'https://comp-soc.com/static/img/compsoc-horizontal.svg',
+        logo: 'https://comp-soc.com/static/img/compsoc-horizontal.png',
         copyright: 'CompSoc ♥ You.',
       }
     })
@@ -16,13 +16,14 @@ class Email {
 
   sendMail(subject, emailContent, address, msgID) {
     const email = this.mgen.generate(emailContent);
-    console.log('sending msg-id',msgID)
+
     const mgData = {
       from: 'CompSoc Edinburgh <hello@comp-soc.com>',
       to: address,
       subject: subject,
       html: email,
-      'h:Message-ID': msgID,
+      'h:Message-ID': msgID + "@stripe.comp-soc.com",
+      'h:In-Reply-To': msgID + '@stripe.comp-soc.com',
     }
     MailGun.messages().send(mgData)
       .catch(function(err) {

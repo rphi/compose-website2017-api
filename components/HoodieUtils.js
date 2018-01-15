@@ -45,7 +45,7 @@ class HoodieUtils {
     const email = {
       body: {
         title: "You've just bought a CompSoc hoodie!",
-        intro: "We'll let you know when your hoodie will arrive.",
+        intro: "We'll let you know when you can pick up your hoodie.",
         table: {
           data: [
               {
@@ -65,8 +65,7 @@ class HoodieUtils {
           }
         },
         outro: [
-          `The payment on your card ending ${stripeResponse.last4} was successful.`,
-          `Your order ID is <em>${orderId}</em> and your Stripe transaction ID is <em>${stripeResponse.id}</em>`,
+          `Your order ID is <em>${orderId}</em> and your Stripe transaction ID is <em>${stripeResponse.id}</em>.`,
         ]
       }
     }

@@ -187,7 +187,7 @@ class Sales {
         break;
     }
 
-    new EmailUtils().sendMail('Thanks for your recent purchase!', emailContent, req.body.token.email, stripeResponse.id);
+    new EmailUtils().sendMail('Your CompSoc hoodie', emailContent, req.body.token.email, stripeResponse.id);
 
     const response = {
       success: true,
