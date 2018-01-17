@@ -65,7 +65,7 @@ class Sales {
         response.result = 'error';
         response.err_type = "Invalid_Coupon";
         response.err_msg = "You have already used the coupon code provided.";
-      } else if (coupon.email !== req.body.token.email) {
+      } else if (coupon.email !== "" && (coupon.email !== req.body.token.email)) {
         response.result = 'error';
         response.err_type = "Not_Your_Coupon";
         response.err_msg = "The coupon code provided is not associated with your email address.";
