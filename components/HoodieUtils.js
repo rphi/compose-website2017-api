@@ -30,6 +30,38 @@ class HoodieUtils {
       },
     };
   }
+
+  validLogoPosition(code, position) {
+    if (!['Left Breast Embroidery', 'Front Print'].includes(position)) {
+      return false;
+    }
+
+    const hoodie = this.hoodies[code];
+    return !(position === 'Front Print' && hoodie.zip)
+  }
+
+  validLogoColor(color) {
+    return ['Black & White', 'Black & Red', 'White & Red'].includes(color);
+  }
+
+  validHoodie(code) {
+    return !!this.hoodies[code];
+  }
+
+  validSize(code, size) {
+    const sizes = ['XS', 'S', 'M', 'L', 'XL'];
+
+    if (!sizes.includes(size)) {
+      return false;
+    }
+
+    const hoodie = this.hoodies[code];
+    if (hoodie.style === "unisex" && hoodie.zip && size === "XS") {
+      return false;
+    }
+
+    return true;
+  }
   
   // This method checks whether the given price
   // matches the given product code.

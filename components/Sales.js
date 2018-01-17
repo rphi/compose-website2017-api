@@ -89,6 +89,62 @@ class Sales {
     if (req.body.product == "hoodie") {
       const hu = new HoodieUtils();
 
+      if (!hu.validHoodie(req.body.productData.code)) {
+        // Craft an error respnose
+        const response = {};
+        response.result = 'error';
+        response.success = false;
+        response.err_type = "Invalid code";
+        response.err_msg = "That's not a valid hoodie.";
+
+        // Send response
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+        return;
+      }
+
+      if (!hu.validLogoPosition(req.body.productData.code, req.body.productData.logo_position)) {
+        // Craft an error respnose
+        const response = {};
+        response.result = 'error';
+        response.success = false;
+        response.err_type = "Invalid logo position";
+        response.err_msg = "That's not a valid hoodie.";
+
+        // Send response
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+        return;
+      }
+
+      if (!hu.validLogoColor(req.body.productData.logo_color)) {
+        // Craft an error respnose
+        const response = {};
+        response.result = 'error';
+        response.success = false;
+        response.err_type = "Invalid logo colour";
+        response.err_msg = "That's not a valid hoodie.";
+
+        // Send response
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+        return;
+      }
+
+      if (!hu.validSize(req.body.productData.code, req.body.productData.size)) {
+        // Craft an error respnose
+        const response = {};
+        response.result = 'error';
+        response.success = false;
+        response.err_type = "Invalid Size";
+        response.err_msg = "That's not a valid size.";
+
+        // Send response
+        console.log(JSON.stringify(response));
+        res.send(JSON.stringify(response));
+        return;
+      }
+
       // Check to see if the amount matches.
       if (!hu.checkPrice(req.body.productData.code, req.body.amount + discount)) {
         // Craft an error respnose
